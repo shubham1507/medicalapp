@@ -1,9 +1,218 @@
 from rest_framework import viewsets, generics
-from .models import Company
-from .serilaizers import CompanySerliazer
+from rest_framework.response import Response
+from rest_framework.generics import get_object_or_404
+
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
+
+from .models import Company, CompanyBank, Medicine
+from .serilaizers import CompanySerlizer, CompanyBankSerlizer, MedicineSerlizer
+
+# old viewset
+
+# class CompanyViewSet(viewsets.ModelViewSet):
+
+#     queryset = Company.objects.all()
+#     serializer_class = CompanySerliazer
 
 
-class CompanyViewSet(viewsets.ModelViewSet):
+class CompanyViewSet(viewsets.ViewSet):
 
-    queryset = Company.objects.all()
-    serializer_class = CompanySerliazer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request):
+        company = Company.objects.all()
+        serializer = CompanySerlizer(company,
+                                     many=True,
+                                     context={"request": request})
+        # response_dict = {
+        #     "error": False,
+        #     "message": "All Company List Data",
+        #     "data": serializer.data
+        # }
+        # return Response(response_dict)
+        return Response(serializer.data)
+
+    def create(self, request):
+
+        try:
+            serializer = CompanySerlizer(data=request.data,
+                                         context={"request": request})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            dict_response = {
+                "error": False,
+                "message": "Company Data Save Successfully"
+            }
+        except:
+            dict_response = {
+                "error": True,
+                "message": "Error During Saving Company Data"
+            }
+        return Response(dict_response)
+
+    def update(self, request, pk=None):
+        try:
+            queryset = Company.objects.all()
+            company = get_object_or_404(queryset, pk=pk)
+            serializer = CompanySerlizer(company,
+                                         data=request.data,
+                                         context={"request": request})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            dict_response = {
+                "error": False,
+                "message": "Successfully Updated Company Data"
+            }
+        except:
+            dict_response = {
+                "error": True,
+                "message": "Error During Updating Company Data"
+            }
+
+        return Response(dict_response)
+
+
+class CompanyBankViewSet(viewsets.ViewSet):
+
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request):
+
+        try:
+            serializer = CompanyBankSerlizer(data=request.data,
+                                             context={"request": request})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            dict_response = {
+                "error": False,
+                "message": "Company Bank Data Save Successfully"
+            }
+        except:
+            dict_response = {
+                "error": True,
+                "message": "Error During Saving Company Bank Data"
+            }
+        return Response(dict_response)
+
+    def list(self, request):
+        print("list called")
+        queryset = CompanyBank.objects.all()
+        serializer = CompanyBankSerlizer(queryset,
+                                         many=True,
+                                         context={"request": request})
+
+        response_dict = {
+            "error": False,
+            "message": "All Company List Data",
+            "data": serializer.data
+        }
+        return Response(response_dict)
+
+        # return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        print("retrieve called")
+        queryset = CompanyBank.objects.all()
+        companybank = get_object_or_404(queryset, pk=pk)
+        serializer = CompanyBankSerlizer(companybank,
+                                         context={"request": request})
+        return Response({
+            "error": False,
+            "message": "Single Data Fetch",
+            "data": serializer.data
+        })
+
+    def update(self, request, pk=None):
+        print("update called")
+        queryset = CompanyBank.objects.all()
+        companybank = get_object_or_404(queryset, pk=pk)
+        serializer = CompanyBankSerlizer(companybank,
+                                         data=request.data,
+                                         context={"request": request})
+
+        serializer.is_valid()
+        serializer.save()
+        return Response({"error": False, "message": "data has been updated"})
+
+
+class MedicineViewSet(viewsets.ViewSet):
+
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request):
+
+        try:
+            serializer = MedicineSerlizer(data=request.data,
+                                          context={"request": request})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            dict_response = {
+                "error": False,
+                "message": "Medicine Data Save Successfully"
+            }
+        except:
+            dict_response = {
+                "error": True,
+                "message": "Error During Saving Medicine Data"
+            }
+        return Response(dict_response)
+
+    def list(self, request):
+        print("list called")
+        queryset = Medicine.objects.all()
+        serializer = MedicineSerlizer(queryset,
+                                      many=True,
+                                      context={"request": request})
+
+        response_dict = {
+            "error": False,
+            "message": "All Company List Data",
+            "data": serializer.data
+        }
+        return Response(response_dict)
+
+        # return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        print("retrieve called")
+        queryset = Medicine.objects.all()
+        medicine = get_object_or_404(queryset, pk=pk)
+        serializer = MedicineSerlizer(medicine, context={"request": request})
+        return Response({
+            "error": False,
+            "message": "Single Data Fetch",
+            "data": serializer.data
+        })
+
+    def update(self, request, pk=None):
+        print("update called")
+        queryset = Medicine.objects.all()
+        medicine = get_object_or_404(queryset, pk=pk)
+        serializer = MedicineSerlizer(medicine,
+                                      data=request.data,
+                                      context={"request": request})
+
+        serializer.is_valid()
+        serializer.save()
+        return Response({
+            "error": False,
+            "message": "Medicine Data has been updated"
+        })
+
+
+class CompanyNameViewSet(generics.ListAPIView):
+
+    serializer_class = CompanySerlizer
+
+    def get_queryset(self):
+        name = self.kwargs["name"]
+        return Company.objects.filter(name=name)
+
+
+company_list = CompanyViewSet.as_view({"get": "list"})
+company_creat = CompanyViewSet.as_view({"post": "create"})
+company_update = CompanyViewSet.as_view({"put": "update"})

@@ -32,7 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.admin', 'django.contrib.auth',
     'django.contrib.contenttypes', 'django.contrib.sessions',
     'django.contrib.messages', 'django.contrib.staticfiles', 'rest_framework',
-    'DjangoMedicalApp'
+    'rest_framework.authtoken', 'DjangoMedicalApp'
 ]
 
 MIDDLEWARE = [
@@ -46,6 +46,15 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'django_medical.urls'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION': [
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES':
+    ('rest_framework.permissions.AllowAny',
+     'rest_framework.permissions.IsAuthenticatedOrReadOnly')
+}
 
 TEMPLATES = [
     {
