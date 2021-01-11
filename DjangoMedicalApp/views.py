@@ -5,8 +5,8 @@ from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from .models import Company, CompanyBank, Medicine
-from .serilaizers import CompanySerlizer, CompanyBankSerlizer, MedicineSerlizer
+from .models import Company, CompanyBank, Medicine, MedicalDetails
+from .serilaizers import CompanySerlizer, CompanyBankSerlizer, MedicineSerliazer, MedicalDetailsSerializer
 
 # old viewset
 
@@ -144,12 +144,32 @@ class MedicineViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
     def create(self, request):
-
         try:
-            serializer = MedicineSerlizer(data=request.data,
-                                          context={"request": request})
+            serializer = MedicineSerliazer(data=request.data,
+                                           context={"request": request})
             serializer.is_valid(raise_exception=True)
             serializer.save()
+
+            medicine_id = serializer.data['id']
+            #Access The Serializer Id Which JUSt SAVE in OUR DATABASE TABLE
+            #print(medicine_id)
+
+            #Adding and Saving Id into Medicine Details Table
+            medicine_details_list = []
+            for medicine_detail in request.data["medicine_details"]:
+                print(medicine_detail)
+                #Adding medicine id which will work for medicine details serializer
+                medicine_detail["medicine_id"] = medicine_id
+                medicine_details_list.append(medicine_detail)
+                print(medicine_detail)
+
+            serializer2 = MedicalDetailsSerializer(
+                data=medicine_details_list,
+                many=True,
+                context={"request": request})
+            serializer2.is_valid()
+            serializer2.save()
+
             dict_response = {
                 "error": False,
                 "message": "Medicine Data Save Successfully"
@@ -162,26 +182,36 @@ class MedicineViewSet(viewsets.ViewSet):
         return Response(dict_response)
 
     def list(self, request):
-        print("list called")
-        queryset = Medicine.objects.all()
-        serializer = MedicineSerlizer(queryset,
-                                      many=True,
-                                      context={"request": request})
+
+        medicine = Medicine.objects.all()
+        serializer = MedicineSerliazer(medicine,
+                                       many=True,
+                                       context={"request": request})
+
+        medicine_data = serializer.data
+        newmedicinelist = []
+
+        for medicine in medicine_data:
+
+            medicine_details = MedicalDetails.objects.filter(
+                medicine_id=medicine["id"])
+            medicine_details_serializers = MedicalDetailsSerializer(
+                medicine_details, many=True)
+            medicine["medicine_details"] = medicine_details_serializers.data
+            newmedicinelist.append(medicine)
 
         response_dict = {
             "error": False,
-            "message": "All Company List Data",
-            "data": serializer.data
+            "message": "All Medicine List Data",
+            "data": newmedicinelist
         }
         return Response(response_dict)
-
-        # return Response(serializer.data)
 
     def retrieve(self, request, pk=None):
         print("retrieve called")
         queryset = Medicine.objects.all()
         medicine = get_object_or_404(queryset, pk=pk)
-        serializer = MedicineSerlizer(medicine, context={"request": request})
+        serializer = MedicineSerliazer(medicine, context={"request": request})
         return Response({
             "error": False,
             "message": "Single Data Fetch",
@@ -192,9 +222,9 @@ class MedicineViewSet(viewsets.ViewSet):
         print("update called")
         queryset = Medicine.objects.all()
         medicine = get_object_or_404(queryset, pk=pk)
-        serializer = MedicineSerlizer(medicine,
-                                      data=request.data,
-                                      context={"request": request})
+        serializer = MedicineSerliazer(medicine,
+                                       data=request.data,
+                                       context={"request": request})
 
         serializer.is_valid()
         serializer.save()

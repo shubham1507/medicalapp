@@ -20,7 +20,7 @@ class CompanyBankSerlizer(serializers.ModelSerializer):
         return response
 
 
-class MedicineSerlizer(serializers.ModelSerializer):
+class MedicineSerliazer(serializers.ModelSerializer):
     class Meta:
         model = Medicine
         fields = "__all__"
@@ -32,7 +32,7 @@ class MedicineSerlizer(serializers.ModelSerializer):
         return response
 
 
-class MedicalDetailSerlizer(serializers.ModelSerializer):
+class MedicalDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = MedicalDetails
         fields = "__all__"
@@ -40,7 +40,7 @@ class MedicalDetailSerlizer(serializers.ModelSerializer):
     def to_representation(self, instance):
         print("to_representation has been called")
         response = super().to_representation(instance)
-        response['medicine'] = MedicineSerlizer(instance.medicine_id).data
+        response['medicine'] = MedicineSerliazer(instance.medicine_id).data
         return response
 
 
